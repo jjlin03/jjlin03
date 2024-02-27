@@ -15,6 +15,8 @@ interface REPLInputProps {
   setHistory: Dispatch<SetStateAction<string[]>>;
   file: string[][];
   setFile: Dispatch<SetStateAction<string[][]>>;
+  commandHistory: string[];
+  setCommandHistory: Dispatch<SetStateAction<string[]>>;
 }
 // You can use a custom interface or explicit fields or both! An alternative to the current function header might be:
 // REPLInput(history: string[], setHistory: Dispatch<SetStateAction<string[]>>)
@@ -31,16 +33,27 @@ export function REPLInput(props: REPLInputProps) {
     // CHANGED
     var nextHistory: string;
     if (commandString.startsWith("load_file ")) {
-      nextHistory = loadCSVFile(commandString.substring(10));
+      nextHistory = loadCSVFile(commandString.substring(9));
+    } else if (commandString == "view") {
+      nextHistory = viewCSVFile();
     } else {
       nextHistory = commandString;
     }
+    props.setCommandHistory([...props.commandHistory, commandString]);
     props.setHistory([...props.history, nextHistory]);
     setCommandString("");
   }
 
   function loadCSVFile(CSVFile: string) {
-    var thisFile = CSVMap.get(CSVFile);
+    if (
+      CSVFile.length < 3 ||
+      CSVFile.substring(0, 2) !== " <" ||
+      CSVFile.charAt(CSVFile.length - 1) !== ">"
+    ) {
+      return "Incorrect formatting: please put <> around your filename";
+    }
+
+    var thisFile = CSVMap.get(CSVFile.substring(2, CSVFile.length - 1));
     if (thisFile !== undefined) {
       props.setFile(thisFile);
       return "File successfully found";
@@ -48,6 +61,25 @@ export function REPLInput(props: REPLInputProps) {
       return "File not found";
     }
   }
+
+  function viewCSVFile() {
+    if (props.file.length == 0) {
+      return "No file loaded";
+    } else {
+      var ret: string = "";
+      for (var i = 0; i < props.file.length; i++) {
+        for (var j = 0; j < props.file[0].length; j++) {
+          if (j !== 0) {
+            ret += "~space~";
+          }
+          ret += props.file[i][j];
+        }
+        ret += "~new row~";
+      }
+      return ret;
+    }
+  }
+
   /**
    * We suggest breaking down this component into smaller components, think about the individual pieces
    * of the REPL and how they connect to each other...
