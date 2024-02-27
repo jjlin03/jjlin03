@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import "../styles/main.css";
 import { ControlledInput } from "./ControlledInput";
+import { topNBAScorers, topNBARebounders } from "./mockedJson";
 
 const CSVMap = new Map<string, string[][]>([
   ["topNBAScorers", topNBAScorers],
@@ -28,10 +29,13 @@ export function REPLInput(props: REPLInputProps) {
   function handleSubmit(commandString: string) {
     setCount(count + 1);
     // CHANGED
+    var nextHistory: string;
     if (commandString.startsWith("load_file ")) {
-      loadCSVFile(commandString.substring(10));
+      nextHistory = loadCSVFile(commandString.substring(10));
+    } else {
+      nextHistory = commandString;
     }
-    props.setHistory([...props.history, commandString]);
+    props.setHistory([...props.history, nextHistory]);
     setCommandString("");
   }
 
@@ -39,9 +43,9 @@ export function REPLInput(props: REPLInputProps) {
     var thisFile = CSVMap.get(CSVFile);
     if (thisFile !== undefined) {
       props.setFile(thisFile);
-      setCommandString("File successfully found");
+      return "File successfully found";
     } else {
-      setCommandString("File not found");
+      return "File not found";
     }
   }
   /**
