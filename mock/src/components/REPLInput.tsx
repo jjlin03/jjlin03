@@ -8,6 +8,13 @@ const CSVMap = new Map<string, string[][]>([
   ["topNBARebounders", topNBARebounders],
 ]);
 
+const SearchMap = new Map<string, string>([
+  [
+    " <Rank> <1>",
+    "Rank~space~Name~space~Team~space~Pts~new row~1~space~Luka Doncic~space~DAL~space~34.3",
+  ],
+]);
+
 interface REPLInputProps {
   // TODO: Fill this with desired props... Maybe something to keep track of the submitted commands
   // CHANGED
@@ -36,6 +43,8 @@ export function REPLInput(props: REPLInputProps) {
       nextHistory = loadCSVFile(commandString.substring(9));
     } else if (commandString == "view") {
       nextHistory = viewCSVFile();
+    } else if (commandString.startsWith("search ")) {
+      nextHistory = searchCSVFile(commandString.substring(6));
     } else {
       nextHistory = commandString;
     }
@@ -63,23 +72,44 @@ export function REPLInput(props: REPLInputProps) {
   }
 
   function viewCSVFile() {
-    if (props.file.length == 0) {
+    if (props.file[0].length == 0) {
       return "No file loaded";
     } else {
-      var ret: string = "";
-      for (var i = 0; i < props.file.length; i++) {
-        for (var j = 0; j < props.file[0].length; j++) {
-          if (j !== 0) {
-            ret += "~space~";
-          }
-          ret += props.file[i][j];
-        }
-        ret += "~new row~";
-      }
-      return ret;
+      return htmlFormat(props.file);
     }
   }
 
+  function searchCSVFile(CSVFile: string) {
+    var params: string[] = CSVFile.split(" <");
+    if (
+      (params.length !== 2 && params.length !== 3) ||
+      params[1].charAt(params[1].length - 1) !== ">" ||
+      (params.length == 3 && params[2].charAt(params[2].length - 1) !== ">")
+    ) {
+      return "Incorrect formatting: please put <> around optional column followed by value";
+    }
+
+    var query = SearchMap.get(CSVFile);
+    if (query !== undefined) {
+      return query;
+    } else {
+      return "Search value not mocked";
+    }
+  }
+
+  function htmlFormat(array: string[][]) {
+    var ret: string = "";
+    for (var i = 0; i < array.length; i++) {
+      for (var j = 0; j < array[0].length; j++) {
+        if (j !== 0) {
+          ret += "~space~";
+        }
+        ret += array[i][j];
+      }
+      ret += "~new row~";
+    }
+    return ret;
+  }
   /**
    * We suggest breaking down this component into smaller components, think about the individual pieces
    * of the REPL and how they connect to each other...

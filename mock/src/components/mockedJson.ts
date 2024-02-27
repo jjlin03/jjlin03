@@ -4,7 +4,7 @@ export const topNBAScorers = [
   ["2", "Shai Gilgeous-Alexander", "OKC", "31.2"],
   ["3", "Giannis Antetokounmpo", "MIL", "30.8"],
   ["4", "Donovan Mitchell", "CLE", "28.1"],
-  ["5", "Kevin Durant", "PHX", "28.0"],
+  ["5", "Kevin Durant", "OKC", "28.0"],
 ];
 
 export const topNBARebounders = [
