@@ -24,6 +24,8 @@ interface REPLInputProps {
   setFile: Dispatch<SetStateAction<string[][]>>;
   commandHistory: string[];
   setCommandHistory: Dispatch<SetStateAction<string[]>>;
+  mode: string;
+  setMode: Dispatch<SetStateAction<string>>;
 }
 // You can use a custom interface or explicit fields or both! An alternative to the current function header might be:
 // REPLInput(history: string[], setHistory: Dispatch<SetStateAction<string[]>>)
@@ -45,8 +47,10 @@ export function REPLInput(props: REPLInputProps) {
       nextHistory = viewCSVFile();
     } else if (commandString.startsWith("search ")) {
       nextHistory = searchCSVFile(commandString.substring(6));
+    } else if (commandString.startsWith("mode ")) {
+      nextHistory = determineMode(commandString.substring(5));
     } else {
-      nextHistory = commandString;
+      nextHistory = "Invalid Command";
     }
     props.setCommandHistory([...props.commandHistory, commandString]);
     props.setHistory([...props.history, nextHistory]);
@@ -80,7 +84,7 @@ export function REPLInput(props: REPLInputProps) {
   }
 
   function searchCSVFile(CSVFile: string) {
-    var params: string[] = CSVFile.split(" <");
+    const params: string[] = CSVFile.split(" <");
     if (
       (params.length !== 2 && params.length !== 3) ||
       params[1].charAt(params[1].length - 1) !== ">" ||
@@ -89,11 +93,23 @@ export function REPLInput(props: REPLInputProps) {
       return "Incorrect formatting: please put <> around optional column followed by value";
     }
 
-    var query = SearchMap.get(CSVFile);
+    const query = SearchMap.get(CSVFile);
     if (query !== undefined) {
       return query;
     } else {
       return "Search value not mocked";
+    }
+  }
+
+  function determineMode(newMode: string) {
+    if (newMode == "brief") {
+      props.setMode(newMode);
+      return "Mode set to brief";
+    } else if (newMode == "verbose") {
+      props.setMode(newMode);
+      return "Mode set to verbose";
+    } else {
+      return "Invalid mode: must be brief or verbose";
     }
   }
 
