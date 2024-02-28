@@ -10,10 +10,22 @@ const CSVMap = new Map<string, string[][]>([
 
 const SearchMap = new Map<string, string>([
   [
-    " <Rank> <1>",
+    "<Rank> <1>",
     "Rank~space~Name~space~Team~space~Pts~new row~1~space~Luka Doncic~space~DAL~space~34.3",
   ],
 ]);
+
+/**
+ * A command-processor function for our REPL. The function returns a string, which is the value to print to history when 
+ * the command is done executing.
+ * 
+ * The arguments passed in the input (which need not be named "args") should 
+ * *NOT* contain the command-name prefix.
+ */
+export interface REPLFunction {
+  (args: Array<string>): String | String[][];
+}
+
 
 interface REPLInputProps {
   // TODO: Fill this with desired props... Maybe something to keep track of the submitted commands
@@ -41,14 +53,15 @@ export function REPLInput(props: REPLInputProps) {
     setCount(count + 1);
     // CHANGED
     var nextHistory: string;
+    commandString = commandString.trim(); // added
     if (commandString.startsWith("load_file ")) {
-      nextHistory = loadCSVFile(commandString.substring(9));
+      nextHistory = String(loadCSVFile(commandString.split(/\s+/)));
     } else if (commandString == "view") {
-      nextHistory = viewCSVFile();
+      nextHistory = String(viewCSVFile(commandString.split(/\s+/))); // placeholder input for viewCSV
     } else if (commandString.startsWith("search ")) {
-      nextHistory = searchCSVFile(commandString.substring(6));
+      nextHistory = String(searchCSVFile(commandString.split(" <")));
     } else if (commandString.startsWith("mode ")) {
-      nextHistory = determineMode(commandString.substring(5));
+      nextHistory = String(determineMode(commandString.split(/\s+/)));
     } else {
       nextHistory = "Invalid Command";
     }
@@ -57,16 +70,17 @@ export function REPLInput(props: REPLInputProps) {
     setCommandString("");
   }
 
-  function loadCSVFile(CSVFile: string) {
+  const loadCSVFile:REPLFunction = (CSVFile:Array<string>) => {
+    var filepath = CSVFile[1];
     if (
-      CSVFile.length < 3 ||
-      CSVFile.substring(0, 2) !== " <" ||
-      CSVFile.charAt(CSVFile.length - 1) !== ">"
+      filepath.length < 3 ||
+      filepath.charAt(0) !== "<" || // changed
+      filepath.charAt(filepath.length - 1) !== ">"
     ) {
       return "Incorrect formatting: please put <> around your filename";
     }
-
-    var thisFile = CSVMap.get(CSVFile.substring(2, CSVFile.length - 1));
+    // everything but <>
+    var thisFile = CSVMap.get(filepath.substring(1, filepath.length - 1));
     if (thisFile !== undefined) {
       props.setFile(thisFile);
       return "File successfully found";
@@ -75,25 +89,34 @@ export function REPLInput(props: REPLInputProps) {
     }
   }
 
-  function viewCSVFile() {
-    if (props.file[0].length == 0) {
-      return "No file loaded";
-    } else {
-      return htmlFormat(props.file);
-    }
-  }
+  const viewCSVFile: REPLFunction = (CSVFile: Array<string>) => {
+      if (props.file[0].length == 0) {
+        return "No file loaded";
+      } else {
+        return htmlFormat(props.file);
+      }
+    };
 
-  function searchCSVFile(CSVFile: string) {
-    const params: string[] = CSVFile.split(" <");
+  const searchCSVFile:REPLFunction = (CSVFile: Array<string>) => {
+    if (CSVFile.length !== 3) {
+      return "Incorrect formatting: search query must have form: search <column> <value>";
+    }
+    var column = CSVFile[1];
+    var value = CSVFile[2];
     if (
-      (params.length !== 2 && params.length !== 3) ||
-      params[1].charAt(params[1].length - 1) !== ">" ||
-      (params.length == 3 && params[2].charAt(params[2].length - 1) !== ">")
+      column.charAt(column.length - 1) !== ">" ||
+      value.charAt(value.length - 1) !== ">"
     ) {
-      return "Incorrect formatting: please put <> around optional column followed by value";
+      return "Incorrect formatting: search query must have form: search <column> <value>";
     }
 
-    const query = SearchMap.get(CSVFile);
+    var query = searchHtmlFormat(
+      props.file, 
+      column.substring(0, column.length - 1),
+      value.substring(0, value.length - 1)
+      );
+
+    // var query = SearchMap.get("<" + column + " <" + value);
     if (query !== undefined) {
       return query;
     } else {
@@ -101,16 +124,52 @@ export function REPLInput(props: REPLInputProps) {
     }
   }
 
-  function determineMode(newMode: string) {
-    if (newMode == "brief") {
-      props.setMode(newMode);
-      return "Mode set to brief";
-    } else if (newMode == "verbose") {
-      props.setMode(newMode);
-      return "Mode set to verbose";
-    } else {
-      return "Invalid mode: must be brief or verbose";
+  const determineMode: REPLFunction = (CSVFile: Array<String>) => {
+    if (CSVFile.length !== 2) {
+      return "Input must be of form: mode mode";
     }
+    var newMode = String(CSVFile[1]);
+
+    if (newMode == "brief" || newMode == "verbose") {
+      props.setMode(newMode);
+      return "Mode set to " + newMode;
+    } else {
+      return "Invalid mode: mode must be brief or verbose";
+    }
+  }
+
+  function searchHtmlFormat(array: string[][], column: string, value: string) {
+    var ret: string = "";
+    var col_ind: number = -1;
+    // header
+    for (var j = 0; j < array[0].length; j++) {
+      if (j !== 0) {
+        ret += "~space~";
+      }
+      ret += array[0][j];
+      if (column === array[0][j]) {
+        col_ind = j;
+      }
+    }
+    ret += "~new row~";
+    if (j === -1) {
+      return ret;
+    }
+
+    for (var i = 1; i < array.length; i++) {
+      var tmp: string = "";
+      for (var j = 0; j < array[0].length; j++) {
+        if (j !== 0) {
+          tmp += "~space~";
+        }
+        tmp += array[i][j];
+      }
+      tmp += "~new row~";
+      if (array[i][col_ind] === value) {
+        ret += tmp;
+      }
+    }
+    return ret;
   }
 
   function htmlFormat(array: string[][]) {
@@ -144,7 +203,6 @@ export function REPLInput(props: REPLInputProps) {
           ariaLabel={"Command input"}
         />
       </fieldset>
-      {/* TODO: Currently this button just counts up, can we make it push the contents of the input box to the history?*/}
       <button onClick={() => handleSubmit(commandString)}>
         Submitted {count} times
       </button>

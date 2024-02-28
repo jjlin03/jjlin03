@@ -8,7 +8,7 @@ interface REPLHistoryProps {
   mode: string;
 }
 export function REPLHistory(props: REPLHistoryProps) {
-  var error: string = "Inavlid Mode";
+  var error: string = "Invalid Mode";
   return (
     <div className="repl-history" aria-label="repl-history">
       {/* This is where command history will go */}
