@@ -8,12 +8,12 @@ const CSVMap = new Map<string, string[][]>([
   ["topNBARebounders", topNBARebounders],
 ]);
 
-const SearchMap = new Map<string, string>([
-  [
-    "<Rank> <1>",
-    "Rank~space~Name~space~Team~space~Pts~new row~1~space~Luka Doncic~space~DAL~space~34.3",
-  ],
-]);
+// const SearchMap = new Map<string, string>([
+//   [
+//     "<Rank> <1>",
+//     "Rank~space~Name~space~Team~space~Pts~new row~1~space~Luka Doncic~space~DAL~space~34.3",
+//   ],
+// ]);
 
 /**
  * A command-processor function for our REPL. The function returns a string, which is the value to print to history when 
@@ -25,6 +25,7 @@ const SearchMap = new Map<string, string>([
 export interface REPLFunction {
   (args: Array<string>): String | String[][];
 }
+
 
 
 interface REPLInputProps {
@@ -42,11 +43,14 @@ interface REPLInputProps {
 // You can use a custom interface or explicit fields or both! An alternative to the current function header might be:
 // REPLInput(history: string[], setHistory: Dispatch<SetStateAction<string[]>>)
 export function REPLInput(props: REPLInputProps) {
+  const functionMap = new Map<string, REPLFunction>();
   // Remember: let React manage state in your webapp.
   // Manages the contents of the input box
   const [commandString, setCommandString] = useState<string>("");
   // TODO WITH TA : add a count state
   const [count, setCount] = useState<number>(0);
+
+ 
 
   // This function is triggered when the button is clicked.
   function handleSubmit(commandString: string) {
@@ -54,26 +58,37 @@ export function REPLInput(props: REPLInputProps) {
     // CHANGED
     var nextHistory: string;
     commandString = commandString.trim(); // added
-    if (commandString.startsWith("load_file ")) {
-      nextHistory = String(loadCSVFile(commandString.split(/\s+/)));
-    } else if (commandString == "view") {
-      nextHistory = String(viewCSVFile(commandString.split(/\s+/))); // placeholder input for viewCSV
-    } else if (commandString.startsWith("search ")) {
-      nextHistory = String(searchCSVFile(commandString.split(" <")));
-    } else if (commandString.startsWith("mode ")) {
-      nextHistory = String(determineMode(commandString.split(/\s+/)));
+    var inputs: string[] = commandString.split(/\s+/);
+    const command = inputs[0]
+    if (functionMap.has(command)) {
+      const currFunc = functionMap.get(command)
+      if (currFunc != undefined){
+        nextHistory = String(currFunc(inputs))
+      } else {
+        nextHistory = "Invalid Command";
+      }
     } else {
       nextHistory = "Invalid Command";
     }
     props.setCommandHistory([...props.commandHistory, commandString]);
     props.setHistory([...props.history, nextHistory]);
     setCommandString("");
+    // if (commandString.startsWith("load_file ")) {
+    //   nextHistory = String(loadCSVFile(commandString.split(/\s+/)));
+    // } else if (commandString == "view") {
+    //   nextHistory = String(viewCSVFile(commandString.split(/\s+/))); // placeholder input for viewCSV
+    // } else if (commandString.startsWith("search ")) {
+    //   nextHistory = String(searchCSVFile(commandString.split(" <")));
+    // } else if (commandString.startsWith("mode ")) {
+    //   nextHistory = String(determineMode(commandString.split(/\s+/)));
+    // } else {
+    //   nextHistory = "Invalid Command";
+    // }
   }
 
-  const loadCSVFile:REPLFunction = (CSVFile:Array<string>) => {
-    var filepath = CSVFile[1];
+  const loadCSVFile:REPLFunction = (inputs:Array<string>) => {
+    var filepath: string = inputs[1];
     if (
-      filepath.length < 3 ||
       filepath.charAt(0) !== "<" || // changed
       filepath.charAt(filepath.length - 1) !== ">"
     ) {
@@ -89,20 +104,23 @@ export function REPLInput(props: REPLInputProps) {
     }
   }
 
-  const viewCSVFile: REPLFunction = (CSVFile: Array<string>) => {
-      if (props.file[0].length == 0) {
-        return "No file loaded";
-      } else {
-        return htmlFormat(props.file);
-      }
-    };
+  const viewCSVFile: REPLFunction = (inputs: Array<string>) => {
+    console.log("viewed")
+    if (props.file[0].length == 0) {
+      return "No file loaded";
+    } else {
+      return htmlFormat(props.file);
+    }
+  };
 
-  const searchCSVFile:REPLFunction = (CSVFile: Array<string>) => {
-    if (CSVFile.length !== 3) {
+  const searchCSVFile: REPLFunction = (inputs: Array<string>) => {
+    var command: string = inputs.join(" ")
+    var inputs = command.split(" <")
+    if (inputs.length !== 3) {
       return "Incorrect formatting: search query must have form: search <column> <value>";
     }
-    var column = CSVFile[1];
-    var value = CSVFile[2];
+    var column = inputs[1];
+    var value = inputs[2];
     if (
       column.charAt(column.length - 1) !== ">" ||
       value.charAt(value.length - 1) !== ">"
@@ -111,10 +129,10 @@ export function REPLInput(props: REPLInputProps) {
     }
 
     var query = searchHtmlFormat(
-      props.file, 
-      column.substring(0, column.length - 1),
-      value.substring(0, value.length - 1)
-      );
+      props.file,
+      column.substring(1, column.length - 1),
+      value.substring(1, value.length - 1)
+    );
 
     // var query = SearchMap.get("<" + column + " <" + value);
     if (query !== undefined) {
@@ -122,13 +140,13 @@ export function REPLInput(props: REPLInputProps) {
     } else {
       return "Search value not mocked";
     }
-  }
+  };
 
-  const determineMode: REPLFunction = (CSVFile: Array<String>) => {
-    if (CSVFile.length !== 2) {
+  const determineMode: REPLFunction = (inputs: Array<String>) => {
+    if (inputs.length !== 2) {
       return "Input must be of form: mode mode";
     }
-    var newMode = String(CSVFile[1]);
+    var newMode = String(inputs[1]);
 
     if (newMode == "brief" || newMode == "verbose") {
       props.setMode(newMode);
@@ -136,7 +154,7 @@ export function REPLInput(props: REPLInputProps) {
     } else {
       return "Invalid mode: mode must be brief or verbose";
     }
-  }
+  };
 
   function searchHtmlFormat(array: string[][], column: string, value: string) {
     var ret: string = "";
@@ -185,6 +203,12 @@ export function REPLInput(props: REPLInputProps) {
     }
     return ret;
   }
+
+  functionMap.set("load_file", loadCSVFile);
+  functionMap.set("view", viewCSVFile);
+  functionMap.set("search", searchCSVFile);
+  functionMap.set("mode", determineMode);
+
   /**
    * We suggest breaking down this component into smaller components, think about the individual pieces
    * of the REPL and how they connect to each other...
