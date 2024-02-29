@@ -26,8 +26,6 @@ export interface REPLFunction {
   (args: Array<string>): String | String[][];
 }
 
-
-
 interface REPLInputProps {
   // TODO: Fill this with desired props... Maybe something to keep track of the submitted commands
   // CHANGED
@@ -40,6 +38,7 @@ interface REPLInputProps {
   mode: string;
   setMode: Dispatch<SetStateAction<string>>;
 }
+
 // You can use a custom interface or explicit fields or both! An alternative to the current function header might be:
 // REPLInput(history: string[], setHistory: Dispatch<SetStateAction<string[]>>)
 export function REPLInput(props: REPLInputProps) {
@@ -50,15 +49,13 @@ export function REPLInput(props: REPLInputProps) {
   // TODO WITH TA : add a count state
   const [count, setCount] = useState<number>(0);
 
- 
-
   // This function is triggered when the button is clicked.
   function handleSubmit(commandString: string) {
     setCount(count + 1);
     // CHANGED
     var nextHistory: string;
     commandString = commandString.trim(); // added
-    var inputs: string[] = commandString.split(/\s+/);
+    var inputs: string[] = commandString.split(" <");
     const command = inputs[0]
     if (functionMap.has(command)) {
       const currFunc = functionMap.get(command)
@@ -73,29 +70,14 @@ export function REPLInput(props: REPLInputProps) {
     props.setCommandHistory([...props.commandHistory, commandString]);
     props.setHistory([...props.history, nextHistory]);
     setCommandString("");
-    // if (commandString.startsWith("load_file ")) {
-    //   nextHistory = String(loadCSVFile(commandString.split(/\s+/)));
-    // } else if (commandString == "view") {
-    //   nextHistory = String(viewCSVFile(commandString.split(/\s+/))); // placeholder input for viewCSV
-    // } else if (commandString.startsWith("search ")) {
-    //   nextHistory = String(searchCSVFile(commandString.split(" <")));
-    // } else if (commandString.startsWith("mode ")) {
-    //   nextHistory = String(determineMode(commandString.split(/\s+/)));
-    // } else {
-    //   nextHistory = "Invalid Command";
-    // }
   }
 
   const loadCSVFile:REPLFunction = (inputs:Array<string>) => {
     var filepath: string = inputs[1];
-    if (
-      filepath.charAt(0) !== "<" || // changed
-      filepath.charAt(filepath.length - 1) !== ">"
-    ) {
+    if (filepath.charAt(filepath.length - 1) !== ">") {
       return "Incorrect formatting: please put <> around your filename";
     }
-    // everything but <>
-    var thisFile = CSVMap.get(filepath.substring(1, filepath.length - 1));
+    var thisFile = CSVMap.get(filepath.substring(0, filepath.length - 1));
     if (thisFile !== undefined) {
       props.setFile(thisFile);
       return "File successfully found";
@@ -105,7 +87,6 @@ export function REPLInput(props: REPLInputProps) {
   }
 
   const viewCSVFile: REPLFunction = (inputs: Array<string>) => {
-    console.log("viewed")
     if (props.file[0].length == 0) {
       return "No file loaded";
     } else {
@@ -114,47 +95,84 @@ export function REPLInput(props: REPLInputProps) {
   };
 
   const searchCSVFile: REPLFunction = (inputs: Array<string>) => {
-    var command: string = inputs.join(" ")
-    var inputs = command.split(" <")
-    if (inputs.length !== 3) {
-      return "Incorrect formatting: search query must have form: search <column> <value>";
-    }
-    var column = inputs[1];
-    var value = inputs[2];
-    if (
-      column.charAt(column.length - 1) !== ">" ||
-      value.charAt(value.length - 1) !== ">"
-    ) {
+    var query;
+    if (inputs.length === 3) {
+      var column = inputs[1];
+      var value = inputs[2];
+      if (
+        column.charAt(column.length - 1) !== ">" ||
+        value.charAt(value.length - 1) !== ">"
+      ) {
+        return "Incorrect formatting: search query must have form: search <column> <value>";
+      }
+      query = searchHtmlFormat(
+        props.file,
+        column.substring(0, column.length - 1),
+        value.substring(0, value.length - 1)
+      );
+    } else if (inputs.length === 2) {
+      var value = inputs[1];
+      if (value.charAt(value.length - 1) !== ">") {
+        return "Incorrect formatting: search query must have form: search <column> <value>";
+      }
+      query = searchHtmlFormatNoColumn(
+        props.file,
+        value.substring(0, value.length - 1)
+      );
+    } else {
       return "Incorrect formatting: search query must have form: search <column> <value>";
     }
 
-    var query = searchHtmlFormat(
-      props.file,
-      column.substring(1, column.length - 1),
-      value.substring(1, value.length - 1)
-    );
-
-    // var query = SearchMap.get("<" + column + " <" + value);
     if (query !== undefined) {
       return query;
     } else {
       return "Search value not mocked";
     }
-  };
+  } 
 
   const determineMode: REPLFunction = (inputs: Array<String>) => {
     if (inputs.length !== 2) {
-      return "Input must be of form: mode mode";
+      return "Input must be of form: mode <mode>";
     }
-    var newMode = String(inputs[1]);
+    var newMode = String(inputs[1].substring(0, inputs[1].length - 1));
 
     if (newMode == "brief" || newMode == "verbose") {
       props.setMode(newMode);
       return "Mode set to " + newMode;
     } else {
-      return "Invalid mode: mode must be brief or verbose";
+      return "Invalid mode: mode must be <brief> or <verbose>";
     }
   };
+
+  function searchHtmlFormatNoColumn(array: string[][], value: string) {
+    var ret: string = "";
+    for (var j = 0; j < array[0].length; j++) {
+      if (j !== 0) {
+        ret += "~space~";
+      }
+      ret += array[0][j];
+    }
+    ret += "~new row~";
+
+    for (var i = 1; i < array.length; i++) {
+      var tmp: string = "";
+      var b = false;
+      for (var j = 0; j < array[0].length; j++) {
+        if (j !== 0) {
+          tmp += "~space~";
+        }
+        if (array[i][j] === value) {
+          b = true;
+        }
+        tmp += array[i][j];
+      }
+      tmp += "~new row~";
+      if (b) {
+        ret += tmp;
+      }
+    }
+    return ret;
+  }
 
   function searchHtmlFormat(array: string[][], column: string, value: string) {
     var ret: string = "";
