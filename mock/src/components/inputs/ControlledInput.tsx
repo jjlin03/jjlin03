@@ -1,4 +1,4 @@
-import '../styles/main.css';
+import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
 import { Dispatch, SetStateAction } from 'react';
 
 // Remember that parameter names don't necessarily need to overlap;

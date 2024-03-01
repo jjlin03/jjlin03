@@ -1,4 +1,4 @@
-import "../styles/main.css";
+import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
 
 interface REPLHistoryProps {
   // TODO: Fill with some shared state tracking all the pushed commands
@@ -10,7 +10,7 @@ interface REPLHistoryProps {
 export function REPLHistory(props: REPLHistoryProps) {
   var error: string = "Invalid Mode";
   return (
-    <div className="repl-history" aria-label="repl-history">
+    <div className="repl-history" aria-label="repl-history" data-testid="repl-history">
       {/* This is where command history will go */}
       {/* TODO: To go through all the pushed commands... try the .map() function! */}
       {/* CHANGED */}

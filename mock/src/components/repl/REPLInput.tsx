@@ -1,7 +1,8 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import "../styles/main.css";
-import { ControlledInput } from "./ControlledInput";
-import { topNBAScorers, topNBARebounders } from "./mockedJson";
+import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
+// mock-jlin142-kczheng\mock\src\styles\main.css
+import { ControlledInput } from "../inputs/ControlledInput";
+import { topNBAScorers, topNBARebounders } from "../data/mockedJson";
 
 const CSVMap = new Map<string, string[][]>([
   ["topNBAScorers", topNBAScorers],
@@ -16,10 +17,10 @@ const CSVMap = new Map<string, string[][]>([
 // ]);
 
 /**
- * A command-processor function for our REPL. The function returns a string, which is the value to print to history when 
+ * A command-processor function for our REPL. The function returns a string, which is the value to print to history when
  * the command is done executing.
- * 
- * The arguments passed in the input (which need not be named "args") should 
+ *
+ * The arguments passed in the input (which need not be named "args") should
  * *NOT* contain the command-name prefix.
  */
 export interface REPLFunction {
@@ -56,11 +57,11 @@ export function REPLInput(props: REPLInputProps) {
     var nextHistory: string;
     commandString = commandString.trim(); // added
     var inputs: string[] = commandString.split(" <");
-    const command = inputs[0]
+    const command = inputs[0];
     if (functionMap.has(command)) {
-      const currFunc = functionMap.get(command)
-      if (currFunc != undefined){
-        nextHistory = String(currFunc(inputs))
+      const currFunc = functionMap.get(command);
+      if (currFunc != undefined) {
+        nextHistory = String(currFunc(inputs));
       } else {
         nextHistory = "Invalid Command";
       }
@@ -72,7 +73,7 @@ export function REPLInput(props: REPLInputProps) {
     setCommandString("");
   }
 
-  const loadCSVFile:REPLFunction = (inputs:Array<string>) => {
+  const loadCSVFile: REPLFunction = (inputs: Array<string>) => {
     var filepath: string = inputs[1];
     if (filepath.charAt(filepath.length - 1) !== ">") {
       return "Incorrect formatting: please put <> around your filename";
@@ -84,7 +85,7 @@ export function REPLInput(props: REPLInputProps) {
     } else {
       return "File not found";
     }
-  }
+  };
 
   const viewCSVFile: REPLFunction = (inputs: Array<string>) => {
     if (props.file[0].length == 0) {
@@ -128,7 +129,7 @@ export function REPLInput(props: REPLInputProps) {
     } else {
       return "Search value not mocked";
     }
-  } 
+  };
 
   const determineMode: REPLFunction = (inputs: Array<String>) => {
     if (inputs.length !== 2) {
