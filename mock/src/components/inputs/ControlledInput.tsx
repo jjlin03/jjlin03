@@ -1,18 +1,20 @@
 import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
 import { Dispatch, SetStateAction } from 'react';
 
-// Remember that parameter names don't necessarily need to overlap;
-// I could use different variable names in the actual function.
+/**
+ * This is the interface for the input for ControlledInput.
+ */
 interface ControlledInputProps {
     value: string, 
-    // This type comes from React+TypeScript. VSCode can suggest these.
-    //   Concretely, this means "a function that sets a state containing a string"
     setValue: Dispatch<SetStateAction<string>>,
     ariaLabel: string 
   }
   
-  // Input boxes contain state. We want to make sure React is managing that state,
-  //   so we have a special component that wraps the input box.
+  /**
+   * This function covers the functionality of the command box.
+   * @param param0 This input implements the ControlledInputProps interface.
+   * @returns new command box
+   */
   export function ControlledInput({value, setValue, ariaLabel}: ControlledInputProps) {
     return (
       <input type="text" className="repl-command-box"

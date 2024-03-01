@@ -12,9 +12,11 @@ import { REPLInput } from "./REPLInput";
   You don't need to do that for this gearup.
 */
 
+/**
+ * This function handles the high level REPL functionality. It organizes both the repl input and repl history.
+ * @returns new repl inputs and repl history
+ */
 export default function REPL() {
-  // TODO: Add some kind of shared state that holds all the commands submitted.
-  // CHANGED
   const [history, setHistory] = useState<string[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [file, setFile] = useState<string[][]>([[]]);
@@ -22,15 +24,12 @@ export default function REPL() {
 
   return (
     <div className="repl">
-      {/*This is where your REPLHistory might go... You also may choose to add it within your REPLInput 
-      component or somewhere else depending on your component organization. What are the pros and cons of each? */}
       <REPLHistory
         history={history}
         commandHistory={commandHistory}
         mode={mode}
       />
       <hr></hr>
-      {/* CHANGED */}
       <REPLInput
         history={history}
         setHistory={setHistory}

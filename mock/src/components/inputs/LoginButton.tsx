@@ -1,11 +1,19 @@
 import { Dispatch, SetStateAction } from 'react';
 
-
+/**
+ * This the interface for our login button input
+ */
 interface loginProps {
   isLoggedIn: boolean
   setIsLoggedIn: Dispatch<SetStateAction<boolean>>
 }
 
+/**
+ * This function handles all of the login button functionality.
+ * 
+ * @param props implements the loginProps interface
+ * @returns new button based on previous state
+ */
 export function LoginButton(props: loginProps) {
 
   const authenticate = () => {

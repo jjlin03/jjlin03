@@ -1,19 +1,23 @@
 import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
 
+/**
+ * This is the interface for the input for REPLHistory.
+ */
 interface REPLHistoryProps {
-  // TODO: Fill with some shared state tracking all the pushed commands
-  // CHANGED
   history: string[];
   commandHistory: string[];
   mode: string;
 }
+
+/**
+ * This function handles the repl history. It updates based on input and current repl mode.
+ * @param props the current repl states
+ * @returns a history list of commands and outputs
+ */
 export function REPLHistory(props: REPLHistoryProps) {
   var error: string = "Invalid Mode";
   return (
     <div className="repl-history" aria-label="repl-history" data-testid="repl-history">
-      {/* This is where command history will go */}
-      {/* TODO: To go through all the pushed commands... try the .map() function! */}
-      {/* CHANGED */}
       {props.history.map((output, index) =>
         props.mode == "brief" ? (
           props.commandHistory[index] == "view" ||
@@ -44,6 +48,13 @@ export function REPLHistory(props: REPLHistoryProps) {
   );
 }
 
+/**
+ * This function formats a html table.
+ * 
+ * @param output formatted string
+ * @param index index of table
+ * @returns formatted html table
+ */
 function htmlTable(output: string, index: number) {
   return (
     <table key={index} style={{ margin: "auto" }}>

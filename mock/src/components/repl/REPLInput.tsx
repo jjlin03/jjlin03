@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import "../../../../../mock-jlin142-kczheng/mock/src/styles/main.css";
-// mock-jlin142-kczheng\mock\src\styles\main.css
 import { ControlledInput } from "../inputs/ControlledInput";
 import { topNBAScorers, topNBARebounders } from "../data/mockedJson";
 
@@ -9,12 +8,6 @@ const CSVMap = new Map<string, string[][]>([
   ["topNBARebounders", topNBARebounders],
 ]);
 
-// const SearchMap = new Map<string, string>([
-//   [
-//     "<Rank> <1>",
-//     "Rank~space~Name~space~Team~space~Pts~new row~1~space~Luka Doncic~space~DAL~space~34.3",
-//   ],
-// ]);
 
 /**
  * A command-processor function for our REPL. The function returns a string, which is the value to print to history when
@@ -27,6 +20,9 @@ export interface REPLFunction {
   (args: Array<string>): String | String[][];
 }
 
+/**
+ * This is the interface for the input for REPLInput
+ */
 interface REPLInputProps {
   // TODO: Fill this with desired props... Maybe something to keep track of the submitted commands
   // CHANGED
@@ -40,20 +36,25 @@ interface REPLInputProps {
   setMode: Dispatch<SetStateAction<string>>;
 }
 
-// You can use a custom interface or explicit fields or both! An alternative to the current function header might be:
-// REPLInput(history: string[], setHistory: Dispatch<SetStateAction<string[]>>)
+/**
+ * This function handles all of the command box input functionality.
+ * 
+ * @param props current states of our repl
+ * @returns new command box and button 
+ */
 export function REPLInput(props: REPLInputProps) {
   const functionMap = new Map<string, REPLFunction>();
-  // Remember: let React manage state in your webapp.
-  // Manages the contents of the input box
   const [commandString, setCommandString] = useState<string>("");
-  // TODO WITH TA : add a count state
   const [count, setCount] = useState<number>(0);
 
-  // This function is triggered when the button is clicked.
+  /**
+   * This function is triggered when the button is clicked.
+   * It updates the states according to the command box value.
+   *
+   * @param commandString command to be executed
+   */
   function handleSubmit(commandString: string) {
     setCount(count + 1);
-    // CHANGED
     var nextHistory: string;
     commandString = commandString.trim(); // added
     var inputs: string[] = commandString.split(" <");
@@ -73,6 +74,12 @@ export function REPLInput(props: REPLInputProps) {
     setCommandString("");
   }
 
+  /**
+   * This function loads the csv file.
+   *
+   * @param inputs splitted array of command string input
+   * @returns string indicating return success or failure message
+   */
   const loadCSVFile: REPLFunction = (inputs: Array<string>) => {
     var filepath: string = inputs[1];
     if (filepath.charAt(filepath.length - 1) !== ">") {
@@ -87,6 +94,12 @@ export function REPLInput(props: REPLInputProps) {
     }
   };
 
+  /**
+   * This function views the csv file
+   *
+   * @param inputs splitted array of command string input
+   * @returns html formatted view of csv file
+   */
   const viewCSVFile: REPLFunction = (inputs: Array<string>) => {
     if (props.file[0].length == 0) {
       return "No file loaded";
@@ -95,6 +108,12 @@ export function REPLInput(props: REPLInputProps) {
     }
   };
 
+  /**
+   * This function searches the csv file
+   *
+   * @param inputs splitted array of command string input
+   * @returns subset of html table based on search value
+   */
   const searchCSVFile: REPLFunction = (inputs: Array<string>) => {
     var query;
     if (inputs.length === 3) {
@@ -131,6 +150,12 @@ export function REPLInput(props: REPLInputProps) {
     }
   };
 
+  /**
+   * This function changes the mode of our repl
+   *
+   * @param inputs splitted array of command string input
+   * @returns string indicating new (possibly changed) mode
+   */
   const determineMode: REPLFunction = (inputs: Array<String>) => {
     if (inputs.length !== 2) {
       return "Input must be of form: mode <mode>";
@@ -145,6 +170,12 @@ export function REPLInput(props: REPLInputProps) {
     }
   };
 
+  /**
+   * This function formats a html table that needs to be searched over w/o column
+   * @param array file array to be turned into html table format
+   * @param value value to be searched
+   * @returns html formated table
+   */
   function searchHtmlFormatNoColumn(array: string[][], value: string) {
     var ret: string = "";
     for (var j = 0; j < array[0].length; j++) {
@@ -175,10 +206,16 @@ export function REPLInput(props: REPLInputProps) {
     return ret;
   }
 
+  /**
+   * This function formats a html table that needs to be searched over 1/ column
+   * @param array file array to be turned into html table format
+   * @param column column value to be searched
+   * @param value value to be searched
+   * @returns html formated table
+   */
   function searchHtmlFormat(array: string[][], column: string, value: string) {
     var ret: string = "";
     var col_ind: number = -1;
-    // header
     for (var j = 0; j < array[0].length; j++) {
       if (j !== 0) {
         ret += "~space~";
@@ -209,6 +246,11 @@ export function REPLInput(props: REPLInputProps) {
     return ret;
   }
 
+  /**
+   * This function formats a html table
+   * @param array file array to be formatted
+   * @returns formatted string
+   */
   function htmlFormat(array: string[][]) {
     var ret: string = "";
     for (var i = 0; i < array.length; i++) {
@@ -228,16 +270,8 @@ export function REPLInput(props: REPLInputProps) {
   functionMap.set("search", searchCSVFile);
   functionMap.set("mode", determineMode);
 
-  /**
-   * We suggest breaking down this component into smaller components, think about the individual pieces
-   * of the REPL and how they connect to each other...
-   */
   return (
     <div className="repl-input">
-      {/* This is a comment within the JSX. Notice that it's a TypeScript comment wrapped in
-            braces, so that React knows it should be interpreted as TypeScript */}
-      {/* I opted to use this HTML tag; you don't need to. It structures multiple input fields
-            into a single unit, which makes it easier for screenreaders to navigate. */}
       <fieldset>
         <legend>Enter a command:</legend>
         <ControlledInput
