@@ -1,10 +1,11 @@
 {
   "name": "cs32-sprint3-gearup",
   "version": "22.2.0",
-  "homepage": "https://jjlin03.github.io/mock-deploy",
+  "homepage": "https://jjlin03.github.io/mock-deploy/",
   "description": "Brown CSCI0320 Sprint 3 Gearup for Fall 2023",
   "license": "UNLICENSED",
   "dependencies": {
+    "gh-pages": "^6.1.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
   },
